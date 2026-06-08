@@ -31,7 +31,7 @@ export default function AdminMerchantDetail() {
         <StatCard title={t('dashboard.total_clients')} value={String(merchant.customersCount)} icon={Users} color="blue" />
         <StatCard title={t('admin.total_cards')} value={String(merchant.cardsCount)} icon={CreditCard} color="green" />
         <StatCard title={t('admin.total_points')} value={merchant.pointsDistributed.toLocaleString()} icon={Star} color="purple" />
-        <StatCard title={t('admin.subscription')} value={merchant.subscription === 'pro' ? 'Pro' : 'Free'} color="orange" />
+        {/* <StatCard title={t('admin.subscription')} value={merchant.subscription === 'pro' ? 'Pro' : 'Free'} color="orange" /> */}
       </div>
 
       <Tabs defaultValue="overview">
@@ -40,7 +40,7 @@ export default function AdminMerchantDetail() {
           <TabsTrigger value="customers">{t('admin.tab_customers')}</TabsTrigger>
           <TabsTrigger value="transactions">{t('admin.tab_transactions')}</TabsTrigger>
           <TabsTrigger value="card_design">{t('admin.tab_card_design')}</TabsTrigger>
-          <TabsTrigger value="subscription">{t('admin.tab_subscription')}</TabsTrigger>
+          {/* <TabsTrigger value="subscription">{t('admin.tab_subscription')}</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-4">

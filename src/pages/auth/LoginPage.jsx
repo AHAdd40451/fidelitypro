@@ -25,7 +25,7 @@ export default function LoginPage() {
       setLoading(false);
       if (role === 'merchant') navigate('/merchant/dashboard');
       else if (role === 'admin') navigate('/admin/dashboard');
-      else navigate('/superadmin/dashboard');
+      // else navigate('/superadmin/dashboard');
     }, 800);
   };
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
               <SelectContent>
                 <SelectItem value="merchant">{t('auth.merchant')}</SelectItem>
                 <SelectItem value="admin">{t('auth.admin')}</SelectItem>
-                <SelectItem value="superadmin">{t('auth.superadmin')}</SelectItem>
+                {/* <SelectItem value="superadmin">{t('auth.superadmin')}</SelectItem> */}
               </SelectContent>
             </Select>
           </div>
