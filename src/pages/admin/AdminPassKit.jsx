@@ -31,9 +31,9 @@ export default function AdminPassKit() {
         <TabsList>
           <TabsTrigger value="overview">{t('passkit.overview')}</TabsTrigger>
           <TabsTrigger value="templates">{t('passkit.templates')}</TabsTrigger>
-          <TabsTrigger value="logs">{t('passkit.logs')}</TabsTrigger>
+          {/* <TabsTrigger value="logs">{t('passkit.logs')}</TabsTrigger>
           <TabsTrigger value="sync">{t('passkit.card_sync')}</TabsTrigger>
-          <TabsTrigger value="api">{t('passkit.api_settings')}</TabsTrigger>
+          <TabsTrigger value="api">{t('passkit.api_settings')}</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-4">

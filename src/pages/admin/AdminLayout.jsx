@@ -8,9 +8,9 @@ export default function AdminLayout() {
   const items = [
     { path: 'dashboard', label: t('sidebar.dashboard'), icon: LayoutDashboard },
     { path: 'merchants', label: t('sidebar.merchants'), icon: Store },
-    { path: 'subscriptions', label: t('sidebar.subscriptions'), icon: CreditCard },
+    // { path: 'subscriptions', label: t('sidebar.subscriptions'), icon: CreditCard },
     { path: 'passkit', label: t('sidebar.passkit'), icon: Ticket },
-    { path: 'notifications', label: t('sidebar.notifications'), icon: Bell },
+    // { path: 'notifications', label: t('sidebar.notifications'), icon: Bell },
     { path: 'settings', label: t('sidebar.settings'), icon: Settings },
   ];
   return <DashboardLayout sidebarItems={items} basePath="/admin" title={t('admin.dashboard_title')} />;

@@ -11,7 +11,7 @@ export default function MerchantLayout() {
     { path: 'scanner', label: t('sidebar.scanner'), icon: QrCode },
     { path: 'transactions', label: t('sidebar.transactions'), icon: ArrowLeftRight },
     { path: 'offres', label: t('sidebar.offers'), icon: Gift },
-    { path: 'notifications', label: t('sidebar.notifications'), icon: Bell },
+    // { path: 'notifications', label: t('sidebar.notifications'), icon: Bell },
     { path: 'card-design', label: t('sidebar.card_design'), icon: Palette },
     { path: 'public-page', label: t('sidebar.public_page'), icon: Globe },
     { path: 'settings', label: t('sidebar.settings'), icon: Settings },

@@ -47,12 +47,12 @@ export default function AdminCreateMerchant() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            {/* <div>
               <Label>{t('admin.subscription')}</Label>
               <Select defaultValue="free"><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="free">Free</SelectItem><SelectItem value="pro">Pro</SelectItem></SelectContent>
               </Select>
-            </div>
+            </div> */}
             <div><Label>{t('auth.logo')}</Label>
               <div className="mt-1 border-2 border-dashed border-border rounded-lg p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground cursor-pointer hover:border-primary/50 transition"><Upload className="h-4 w-4" /> Upload</div>
             </div>
