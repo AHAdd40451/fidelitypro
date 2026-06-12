@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAuth } from '@/lib/AuthContext';
+import { getCustomers, deleteCustomer } from '@/services/customerService';
 import PageHeader from '@/components/ui-custom/PageHeader';
 import StatusBadge from '@/components/ui-custom/StatusBadge';
 import EmptyState from '@/components/ui-custom/EmptyState';
@@ -10,23 +12,54 @@ import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Download, Eye, Pencil, Trash2, Users, Smartphone, QrCode } from 'lucide-react';
-import { mockCustomers } from '@/data/mockData';
+import { Search, Download, Eye, Trash2, Users, Smartphone, QrCode, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function MerchantClients() {
   const { t } = useLanguage();
+  const { merchantId } = useAuth();
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const customers = mockCustomers.filter(c => c.merchantId === '1');
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!merchantId) return;
+    getCustomers(merchantId)
+      .then(setCustomers)
+      .catch(() => toast.error('Erreur lors du chargement des clients'))
+      .finally(() => setLoading(false));
+  }, [merchantId]);
 
   const filtered = customers.filter(c => {
-    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search);
+    const name = c.first_name?.toLowerCase() ?? '';
+    const phone = c.phone ?? '';
+    const matchSearch = name.includes(search.toLowerCase()) || phone.includes(search);
     const matchFilter = filter === 'all' || c.status === filter;
     return matchSearch && matchFilter;
   });
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteCustomer(deleteTarget.id);
+      setCustomers(prev => prev.filter(c => c.id !== deleteTarget.id));
+      toast.success(t('common.action_success'));
+    } catch (err) {
+      toast.error(err.message || 'Erreur lors de la suppression');
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -66,13 +99,15 @@ export default function MerchantClients() {
             <TableBody>
               {filtered.map(c => (
                 <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelected(c)}>
-                  <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="hidden sm:table-cell">{c.phone}</TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground">{c.email || '-'}</TableCell>
-                  <TableCell className="font-semibold">{c.points}</TableCell>
-                  <TableCell className="hidden lg:table-cell">{c.visits}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground">{c.lastVisit}</TableCell>
-                  <TableCell><StatusBadge status={c.status} label={t(`clients.${c.status}`)} /></TableCell>
+                  <TableCell className="font-medium">{c.first_name}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{c.phone ?? '—'}</TableCell>
+                  <TableCell className="hidden md:table-cell text-muted-foreground">{c.email ?? '—'}</TableCell>
+                  <TableCell className="font-semibold">{c.points_balance}</TableCell>
+                  <TableCell className="hidden lg:table-cell">{c.visits_count}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-muted-foreground">
+                    {c.last_visit_at ? new Date(c.last_visit_at).toLocaleDateString('fr-FR') : '—'}
+                  </TableCell>
+                  <TableCell><StatusBadge status={c.status ?? 'active'} label={t(`clients.${c.status ?? 'active'}`)} /></TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); setSelected(c); }}><Eye className="h-3.5 w-3.5" /></Button>
@@ -86,31 +121,36 @@ export default function MerchantClients() {
         )}
       </Card>
 
-      {/* Detail Dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{t('clients.detail_title')}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground">{t('clients.name')}</span><p className="font-medium">{selected.name}</p></div>
-                <div><span className="text-muted-foreground">{t('clients.phone')}</span><p className="font-medium">{selected.phone}</p></div>
-                <div><span className="text-muted-foreground">{t('clients.email')}</span><p className="font-medium">{selected.email || '-'}</p></div>
-                <div><span className="text-muted-foreground">{t('clients.points_balance')}</span><p className="font-semibold text-primary text-lg">{selected.points}</p></div>
-                <div><span className="text-muted-foreground">{t('clients.visits')}</span><p className="font-medium">{selected.visits}</p></div>
-                <div><span className="text-muted-foreground">{t('clients.last_visit')}</span><p className="font-medium">{selected.lastVisit}</p></div>
+                <div><span className="text-muted-foreground">{t('clients.name')}</span><p className="font-medium">{selected.first_name}</p></div>
+                <div><span className="text-muted-foreground">{t('clients.phone')}</span><p className="font-medium">{selected.phone ?? '—'}</p></div>
+                <div><span className="text-muted-foreground">{t('clients.email')}</span><p className="font-medium">{selected.email ?? '—'}</p></div>
+                <div><span className="text-muted-foreground">{t('clients.points_balance')}</span><p className="font-semibold text-primary text-lg">{selected.points_balance}</p></div>
+                <div><span className="text-muted-foreground">{t('clients.visits')}</span><p className="font-medium">{selected.visits_count}</p></div>
+                <div><span className="text-muted-foreground">{t('clients.last_visit')}</span><p className="font-medium">{selected.last_visit_at ? new Date(selected.last_visit_at).toLocaleDateString('fr-FR') : '—'}</p></div>
               </div>
               <div className="p-3 rounded-lg bg-muted space-y-2 text-xs">
-                <div className="flex items-center gap-2"><Smartphone className="h-3.5 w-3.5" />{t('clients.apple_serial')}: <span className="font-mono">{selected.appleSerial}</span></div>
-                <div className="flex items-center gap-2"><Smartphone className="h-3.5 w-3.5" />{t('clients.google_id')}: <span className="font-mono">{selected.googleId}</span></div>
-                <div className="flex items-center gap-2"><QrCode className="h-3.5 w-3.5" />{t('clients.qr_token')}: <span className="font-mono">{selected.qrToken}</span></div>
+                <div className="flex items-center gap-2"><Smartphone className="h-3.5 w-3.5" />{t('clients.apple_serial')}: <span className="font-mono">{selected.apple_pass_serial ?? '—'}</span></div>
+                <div className="flex items-center gap-2"><Smartphone className="h-3.5 w-3.5" />{t('clients.google_id')}: <span className="font-mono">{selected.google_wallet_id ?? '—'}</span></div>
+                <div className="flex items-center gap-2"><QrCode className="h-3.5 w-3.5" />{t('clients.qr_token')}: <span className="font-mono">{selected.qr_code_token}</span></div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={() => { toast.success(t('common.action_success')); setDeleteTarget(null); }} title={t('common.confirm_delete')} description={deleteTarget ? `${deleteTarget.name}` : ''} />
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title={t('common.confirm_delete')}
+        description={deleteTarget?.first_name ?? ''}
+      />
     </div>
   );
 }

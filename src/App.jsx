@@ -6,6 +6,8 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { AuthProvider } from '@/lib/AuthContext';
 import { LanguageProvider } from '@/hooks/useLanguage';
 import { ThemeProvider } from '@/hooks/useTheme';
+import RequireAuth from '@/components/auth/RequireAuth';
+import RequireRole from '@/components/auth/RequireRole';
 
 // Public pages
 import Landing from '@/pages/public/Landing';
@@ -42,15 +44,6 @@ import AdminPassKit from '@/pages/admin/AdminPassKit';
 import AdminNotifications from '@/pages/admin/AdminNotifications';
 import AdminSettings from '@/pages/admin/AdminSettings';
 
-// Superadmin pages
-import SuperadminLayout from '@/pages/superadmin/SuperadminLayout';
-import SuperadminDashboard from '@/pages/superadmin/SuperadminDashboard';
-import SuperadminAdmins from '@/pages/superadmin/SuperadminAdmins';
-import SuperadminRoles from '@/pages/superadmin/SuperadminRoles';
-import SuperadminSystemSettings from '@/pages/superadmin/SuperadminSystemSettings';
-import SuperadminAuditLogs from '@/pages/superadmin/SuperadminAuditLogs';
-import SuperadminFeatureFlags from '@/pages/superadmin/SuperadminFeatureFlags';
-
 function AppRoutes() {
   return (
     <Routes>
@@ -66,43 +59,39 @@ function AppRoutes() {
       <Route path="/reinitialiser-mot-de-passe" element={<ResetPasswordPage />} />
       <Route path="/verification" element={<VerifyPage />} />
 
-      {/* Merchant */}
-      <Route path="/merchant" element={<MerchantLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<MerchantDashboard />} />
-        <Route path="clients" element={<MerchantClients />} />
-        <Route path="scanner" element={<MerchantScanner />} />
-        <Route path="transactions" element={<MerchantTransactions />} />
-        <Route path="offres" element={<MerchantOffers />} />
-        <Route path="notifications" element={<MerchantNotifications />} />
-        <Route path="card-design" element={<MerchantCardDesign />} />
-        <Route path="public-page" element={<MerchantPublicPage />} />
-        <Route path="settings" element={<MerchantSettings />} />
+      {/* Merchant (protected — role: merchant) */}
+      <Route element={<RequireRole role="merchant" />}>
+        <Route path="/merchant" element={<MerchantLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<MerchantDashboard />} />
+          <Route path="clients" element={<MerchantClients />} />
+          <Route path="scanner" element={<MerchantScanner />} />
+          <Route path="transactions" element={<MerchantTransactions />} />
+          <Route path="offres" element={<MerchantOffers />} />
+          <Route path="notifications" element={<MerchantNotifications />} />
+          <Route path="card-design" element={<MerchantCardDesign />} />
+          <Route path="public-page" element={<MerchantPublicPage />} />
+          <Route path="settings" element={<MerchantSettings />} />
+        </Route>
       </Route>
 
-      {/* Admin */}
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="merchants" element={<AdminMerchants />} />
-        <Route path="merchants/new" element={<AdminCreateMerchant />} />
-        <Route path="merchants/:id" element={<AdminMerchantDetail />} />
-        <Route path="subscriptions" element={<AdminSubscriptions />} />
-        <Route path="passkit" element={<AdminPassKit />} />
-        <Route path="notifications" element={<AdminNotifications />} />
-        <Route path="settings" element={<AdminSettings />} />
+      {/* Admin (protected — role: admin) */}
+      <Route element={<RequireRole role="admin" />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="merchants" element={<AdminMerchants />} />
+          <Route path="merchants/new" element={<AdminCreateMerchant />} />
+          <Route path="merchants/:id" element={<AdminMerchantDetail />} />
+          <Route path="subscriptions" element={<AdminSubscriptions />} />
+          <Route path="passkit" element={<AdminPassKit />} />
+          <Route path="notifications" element={<AdminNotifications />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
       </Route>
 
-      {/* Superadmin */}
-      <Route path="/superadmin" element={<SuperadminLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<SuperadminDashboard />} />
-        <Route path="admins" element={<SuperadminAdmins />} />
-        <Route path="roles" element={<SuperadminRoles />} />
-        <Route path="system-settings" element={<SuperadminSystemSettings />} />
-        <Route path="audit-logs" element={<SuperadminAuditLogs />} />
-        <Route path="feature-flags" element={<SuperadminFeatureFlags />} />
-      </Route>
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -1,0 +1,143 @@
+# Supabase project configuration
+# Reference: https://supabase.com/docs/reference/cli/config
+# Link your project: supabase link --project-ref <your-project-ref>
+
+[api]
+# Allows you to override the default API settings.
+enabled = true
+# Port to use for the Supabase API endpoint.
+port = 54321
+# Schemas to expose in your API.
+schemas = ["public", "storage", "graphql_public"]
+# Extra schemas to add to the search path.
+extra_search_path = ["public", "extensions"]
+# Maximum number of rows returned from a table view.
+max_rows = 1000
+
+[db]
+# Port to use for the Supabase database.
+port = 54322
+# Port used by Supabase Studio.
+shadow_port = 54320
+# Major version of PostgreSQL to use.
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+# Port to use for Supabase Studio.
+port = 54323
+# External URL of the API server that frontend connects to.
+api_url = "http://127.0.0.1"
+openai_api_key = "env(OPENAI_API_KEY)"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+# Size limit for uploaded files in bytes.
+# 50 MB default; increase if you store large card assets.
+file_size_limit = "52428800"
+
+[storage.image_transformation]
+enabled = true
+
+[auth]
+enabled = true
+# The base URL of your website (used for magic links and OAuth callbacks).
+site_url = "http://localhost:5173"
+# A list of *exact* URLs that auth providers are permitted to redirect to.
+additional_redirect_urls = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]
+# How long tokens are valid for (seconds).
+jwt_expiry = 3600
+# If disabled, the refresh token will never expire.
+enable_refresh_token_rotation = true
+# Period of time an incomplete sign-in flow will remain valid (seconds).
+refresh_token_reuse_interval = 10
+# Allow / disallow new user signups.
+enable_signup = true
+# Allow / disallow anonymous sign-ins.
+enable_anonymous_sign_ins = false
+
+[auth.email]
+# Allow / disallow new user signups via email.
+enable_signup = true
+# If enabled, a user will be required to confirm any email change.
+double_confirm_changes = true
+# If enabled, users need to confirm their email address before signing in.
+enable_confirmations = false
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+# Configure individual auth providers here.
+# Uncomment and fill in to enable.
+
+# [auth.external.google]
+# enabled = false
+# client_id = "env(GOOGLE_CLIENT_ID)"
+# secret = "env(GOOGLE_CLIENT_SECRET)"
+
+# [auth.external.apple]
+# enabled = false
+# client_id = "env(APPLE_CLIENT_ID)"
+# secret = "env(APPLE_CLIENT_SECRET)"
+
+[edge_runtime]
+enabled = true
+# Policy to pass-through unrestricted network access for edge functions.
+policy = "per_worker"
+inspector_port = 8083
+
+# ============================================================
+# Edge Functions
+# ============================================================
+
+[functions.public-customer-signup]
+verify_jwt = false
+
+[functions.passkit-create-card]
+verify_jwt = true
+
+[functions.passkit-update-card]
+verify_jwt = true
+
+[functions.add-points-and-sync-card]
+verify_jwt = true
+
+[functions.passkit-push-card-design]
+verify_jwt = true
+
+[functions.passkit-send-notification]
+verify_jwt = true
+
+[functions.passkit-test-connection]
+verify_jwt = true
+
+[functions.passkit-webhook]
+# PassKit calls this — no JWT. Signature validation is done inside the function.
+verify_jwt = false
+
+[analytics]
+enabled = false
+port = 54327
+vector_port = 54328
+# Configure one of the supported backends: `postgres` or `bigquery`.
+backend = "postgres"

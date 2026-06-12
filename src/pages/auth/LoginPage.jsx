@@ -1,32 +1,39 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star } from 'lucide-react';
+import { Star, Loader2 } from 'lucide-react';
 import LanguageSwitcher from '@/components/ui-custom/LanguageSwitcher';
 import ThemeToggle from '@/components/ui-custom/ThemeToggle';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const { t } = useLanguage();
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '', remember: false });
-  const [role, setRole] = useState('merchant');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const { profile } = await login(email, password);
+      if (profile?.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/merchant/dashboard');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Identifiants invalides');
+    } finally {
       setLoading(false);
-      if (role === 'merchant') navigate('/merchant/dashboard');
-      else if (role === 'admin') navigate('/admin/dashboard');
-      // else navigate('/superadmin/dashboard');
-    }, 800);
+    }
   };
 
   return (
@@ -43,37 +50,40 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>{t('auth.email')}</Label>
-            <Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="mt-1" required />
+            <Input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="mt-1"
+              required
+              autoComplete="email"
+            />
           </div>
           <div>
-            <Label>{t('auth.password')}</Label>
-            <Input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} className="mt-1" required />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Checkbox id="remember" checked={form.remember} onCheckedChange={v => setForm({...form, remember: v})} />
-              <label htmlFor="remember" className="text-xs">{t('auth.remember')}</label>
+            <div className="flex items-center justify-between mb-1">
+              <Label>{t('auth.password')}</Label>
+              <Link to="/mot-de-passe-oublie" className="text-xs text-primary hover:underline">
+                {t('auth.forgot')}
+              </Link>
             </div>
-            <Link to="/mot-de-passe-oublie" className="text-xs text-primary hover:underline">{t('auth.forgot')}</Link>
-          </div>
-          {/* Demo role selector */}
-          <div className="p-3 rounded-lg bg-muted">
-            <Label className="text-xs text-muted-foreground mb-1.5 block">{t('auth.role_demo')}</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="merchant">{t('auth.merchant')}</SelectItem>
-                <SelectItem value="admin">{t('auth.admin')}</SelectItem>
-                {/* <SelectItem value="superadmin">{t('auth.superadmin')}</SelectItem> */}
-              </SelectContent>
-            </Select>
+            <Input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="mt-1"
+              required
+              autoComplete="current-password"
+            />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? t('common.loading') : t('auth.login_btn')}
+            {loading
+              ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('common.loading')}</>
+              : t('auth.login_btn')}
           </Button>
         </form>
         <p className="text-center text-xs text-muted-foreground mt-4">
-          {t('auth.no_account')} <Link to="/inscription" className="text-primary hover:underline">{t('auth.signup_link')}</Link>
+          {t('auth.no_account')}{' '}
+          <Link to="/inscription" className="text-primary hover:underline">{t('auth.signup_link')}</Link>
         </p>
       </Card>
     </div>
