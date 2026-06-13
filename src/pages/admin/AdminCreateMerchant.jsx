@@ -101,7 +101,8 @@ export default function AdminCreateMerchant() {
       // Create free subscription
       await supabase.from('subscriptions').insert({
         merchant_id: merchant.id,
-        plan: 'free',
+        plan_name: 'Free',
+        monthly_price: 0,
         status: 'free',
       });
 

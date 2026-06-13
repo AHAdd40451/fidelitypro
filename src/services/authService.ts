@@ -47,89 +47,24 @@ export async function signupMerchant(data: {
 
     const userId = authData.user.id
 
-    // Generate slug
-    const slug =
-      data.businessName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '') +
-      '-' +
-      Date.now().toString(36)
-
-    // 2. Create merchant
-    const { data: merchant, error: merchantError } = await supabase
-      .from('merchants')
-      .insert({
-        name: data.businessName,
-        owner_name: data.ownerName,
-        email: data.email,
-        phone: data.phone,
-        business_type: data.businessType,
-        card_background_color: data.bgColor,
-        card_text_color: data.textColor,
-        accent_color: data.accentColor,
-        welcome_message: data.welcomeMsg,
-        slug,
-        points_mode: 'amount_based' as const,
-        status: 'active' as const,
-      })
-      .select()
-      .single()
-    if (merchantError) throw new Error(`Impossible de créer le commerce : ${merchantError.message}`)
-
-    const merchantId = merchant.id
-
-    // 3. Insert profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: userId,
-        email: data.email,
-        full_name: data.ownerName,
-        role: 'merchant' as const,
-        merchant_id: merchantId,
-        status: 'active',
-      })
-      .select()
-      .single()
-    if (profileError) throw new Error(`Impossible de créer le profil : ${profileError.message}`)
-
-    // 4. Insert merchant_settings (defaults)
-    const { error: settingsError } = await supabase.from('merchant_settings').insert({
-      merchant_id: merchantId,
-      public_page_enabled: true,
-      phone_required: true,
-      email_required: false,
-      apple_wallet_enabled: true,
-      google_wallet_enabled: true,
+    // Create all merchant records via SECURITY DEFINER RPC.
+    // This bypasses RLS and works whether email confirmation is enabled or not,
+    // because the anon role can call the function even without a session.
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('signup_merchant', {
+      p_user_id:       userId,
+      p_email:         data.email,
+      p_business_name: data.businessName,
+      p_owner_name:    data.ownerName,
+      p_phone:         data.phone,
+      p_business_type: data.businessType,
+      p_bg_color:      data.bgColor,
+      p_text_color:    data.textColor,
+      p_accent_color:  data.accentColor,
+      p_welcome_msg:   data.welcomeMsg,
     })
-    if (settingsError) throw new Error(`Impossible de créer les paramètres : ${settingsError.message}`)
+    if (rpcError) throw new Error(`Impossible de créer le compte : ${rpcError.message}`)
 
-    // 5. Insert card_designs (defaults from merchant colors)
-    const { error: cardDesignError } = await supabase.from('card_designs').insert({
-      merchant_id: merchantId,
-      background_color: data.bgColor,
-      text_color: data.textColor,
-      accent_color: data.accentColor,
-      merchant_name_on_card: data.businessName,
-      card_title: 'Carte de fidélité',
-      points_label: 'Points',
-      qr_label: 'Scanner pour gagner des points',
-      sync_status: 'not_synced' as const,
-    })
-    if (cardDesignError) throw new Error(`Impossible de créer le design de carte : ${cardDesignError.message}`)
-
-    // 6. Insert subscription (Free plan)
-    const { error: subscriptionError } = await supabase.from('subscriptions').insert({
-      merchant_id: merchantId,
-      plan_name: 'Free',
-      monthly_price: 0,
-      status: 'free' as const,
-      starts_at: new Date().toISOString(),
-    })
-    if (subscriptionError) throw new Error(`Impossible de créer l'abonnement : ${subscriptionError.message}`)
-
-    return { user: authData.user, merchant: merchant as Merchant, profile: profile as Profile }
+    return { user: authData.user, merchant: { id: rpcResult.merchant_id } as Merchant, profile: { id: userId } as Profile }
   } catch (err) {
     if (err instanceof Error) throw err
     throw new Error("Erreur inattendue lors de l'inscription.")
