@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { signupMerchant } from '@/services/authService';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +17,7 @@ import { toast } from 'sonner';
 export default function SignupPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { checkUserAuth } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     businessName: '', ownerName: '', email: '', phone: '', password: '', confirmPassword: '',
@@ -47,8 +50,17 @@ export default function SignupPage() {
         accentColor: '#f0c040',
         welcomeMsg: form.welcomeMsg || `Bienvenue chez ${form.businessName} !`,
       });
-      toast.success('Compte créé ! Vérifiez votre email pour confirmer.');
-      navigate('/connexion');
+      // Re-fetch profile now that all DB rows are created (onAuthStateChange fired
+      // before the profile existed, so AuthContext has profile=null at this point)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await checkUserAuth();
+        toast.success('Compte créé avec succès !');
+        navigate('/merchant/dashboard', { replace: true });
+      } else {
+        toast.success('Compte créé ! Vérifiez votre email pour confirmer.');
+        navigate('/connexion');
+      }
     } catch (err) {
       toast.error(err.message || 'Erreur lors de la création du compte');
     } finally {
